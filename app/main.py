@@ -16,7 +16,7 @@ app.add_middleware(
 
 @app.get("/test")
 async def root():
-    return {"message": "hello from web-app-template"}
+    return {"message": "hello from airbrush-web"}
 
 
 @app.get("/ping")

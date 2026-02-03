@@ -4,8 +4,8 @@
 services:
   tailscale:
     image: tailscale/tailscale:latest
-    container_name: web-app-template-tailscale-dev
-    hostname: web-app-template-dev
+    container_name: airbrush-web-tailscale-dev
+    hostname: airbrush-web-dev
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
@@ -23,24 +23,24 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${DOCKERHUB_USERNAME}/web-app-template-frontend:latest
-    container_name: web-app-template-frontend-dev
+    image: ${DOCKERHUB_USERNAME}/airbrush-web-frontend:latest
+    container_name: airbrush-web-frontend-dev
     network_mode: service:tailscale
     depends_on:
       - tailscale
     restart: unless-stopped
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/web-app-template-backend:latest
-    container_name: web-app-template-backend-dev
+    image: ${DOCKERHUB_USERNAME}/airbrush-web-backend:latest
+    container_name: airbrush-web-backend-dev
     network_mode: service:tailscale
     depends_on:
       - tailscale
       - frontend
     restart: unless-stopped
     volumes:
-      - web-app-template-data-dev:/data
+      - airbrush-web-data-dev:/data
 
 volumes:
-  web-app-template-data-dev:
+  airbrush-web-data-dev:
   tailscale-state-dev:

@@ -26,8 +26,8 @@ services:
       - frontend
     restart: unless-stopped
     volumes:
-      - web-app-template-data:/data
+      - airbrush-web-data:/data
 
 volumes:
-  web-app-template-data:
+  airbrush-web-data:
 
