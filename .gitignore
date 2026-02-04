@@ -48,3 +48,5 @@ htmlcov/
 /frontend/yarn-error.log*
 /frontend/pnpm-debug.log*
 /frontend/lerna-debug.log*
+
+source_material

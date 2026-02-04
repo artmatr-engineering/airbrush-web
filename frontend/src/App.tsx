@@ -1,41 +1,111 @@
-import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemHeader,
-  ItemFooter,
-} from "@/components/ui/item";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ModeToggle } from "@/components/mode-toggle";
-import { ClickButton } from "@/components/click-button";
+import { Parameters } from '@/components/Parameters';
+import { ImageDropzone } from '@/components/ImageDropzone';
+import { ImageViewer } from '@/components/ImageViewer';
+import { BottomBar } from '@/components/BottomBar';
+import { useAppStore } from '@/store';
 
 function App() {
+  const {
+    imageBase64,
+    outputFilename,
+    params,
+    isGenerating,
+    viewerTab,
+    previewImageBase64,
+    gcode,
+    setImageUpload,
+    setParams,
+    setIsGenerating,
+    setViewerTab,
+    setPreviewImageBase64,
+    setGcode,
+  } = useAppStore();
+
+  const handleDownload = () => {
+    if (!gcode) return;
+    const blob = new Blob([gcode], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = outputFilename || 'output.nc';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleGenerate = async () => {
+    if (!imageBase64) return;
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          ...params,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate G-code');
+      }
+
+      const result = await response.json();
+      setGcode(result.gcode);
+      setPreviewImageBase64(result.preview_image_base64);
+      setViewerTab('preview');
+    } catch (error) {
+      console.error('Error generating G-code:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-svh">
-      <Item variant="outline" className="flex-col items-start">
-        <ItemHeader>
-          <ItemContent>
-            <ItemTitle>This is a Title</ItemTitle>
-            <ItemDescription>This is a Description</ItemDescription>
-          </ItemContent>
-        </ItemHeader>
-        <div className="w-full">
-          <form>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="input">Input</Label>
-                <Input id="input" placeholder="Type something..." />
-              </div>
-            </div>
-          </form>
-        </div>
-        <ItemFooter className="flex-wrap">
-          <ModeToggle />
-          <ClickButton />
-        </ItemFooter>
-      </Item>
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header */}
+      <header className="border-b bg-background px-4 py-2">
+        <h1 className="text-2xl font-bold">Airbrush G-code Generator</h1>
+      </header>
+
+      {/* Main content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-80 border-r bg-background">
+          <Parameters
+            params={params}
+            setParams={setParams}
+            onGenerate={handleGenerate}
+            isGenerating={isGenerating}
+            hasImage={!!imageBase64}
+            gcode={gcode}
+            onDownload={handleDownload}
+          />
+        </aside>
+
+        {/* Main viewer area */}
+        <main className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 p-4 min-h-0 overflow-hidden">
+            {viewerTab === 'upload' && (
+              <ImageDropzone onUpload={setImageUpload} />
+            )}
+            {viewerTab === 'input' && (
+              <ImageViewer imageBase64={imageBase64} />
+            )}
+            {viewerTab === 'preview' && (
+              <ImageViewer imageBase64={previewImageBase64} />
+            )}
+          </div>
+          <BottomBar
+            viewerTab={viewerTab}
+            setViewerTab={setViewerTab}
+            hasInputImage={!!imageBase64}
+            hasPreviewImage={!!previewImageBase64}
+          />
+        </main>
+      </div>
     </div>
   );
 }
