@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class AirbrushJobRequest(BaseModel):
     image_base64: str = Field(description="Base64-encoded image data")
+    filename: str = Field(default="input_image.png", description="Original filename")
     job_size: tuple[int, int] = Field(description="Target size (width_mm, height_mm)")
     job_location: tuple[float, float] = Field(
         default=(0, 0), description="Job location (x, y) in mm"

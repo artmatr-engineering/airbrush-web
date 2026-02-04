@@ -7,6 +7,7 @@ import { useAppStore } from '@/store';
 function App() {
   const {
     imageBase64,
+    filename,
     outputFilename,
     params,
     isGenerating,
@@ -44,6 +45,7 @@ function App() {
         },
         body: JSON.stringify({
           image_base64: imageBase64,
+          filename,
           ...params,
         }),
       });
