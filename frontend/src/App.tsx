@@ -7,6 +7,7 @@ import { useAppStore } from '@/store';
 function App() {
   const {
     imageBase64,
+    filename,
     outputFilename,
     params,
     isGenerating,
@@ -44,6 +45,7 @@ function App() {
         },
         body: JSON.stringify({
           image_base64: imageBase64,
+          filename,
           ...params,
         }),
       });
@@ -67,7 +69,7 @@ function App() {
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="border-b bg-background px-4 py-2">
-        <h1 className="text-2xl font-bold">Airbrush G-code Generator</h1>
+        <h1 className="text-[1.1rem] font-bold">Matr Labs Airbrush GCODE Generator</h1>
       </header>
 
       {/* Main content */}

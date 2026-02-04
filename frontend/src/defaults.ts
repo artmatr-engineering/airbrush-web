@@ -12,7 +12,7 @@ export const defaultParams: AirbrushParams = {
   z: 15,
   feedrate: 4000,
   gaussian_blur_radius: 2,
-  print_direction: 'bottom_to_top',
+  print_direction: 'top_to_bottom',
   enable_gradient_border: false,
   gradient_border_width: 20,
   gradient_levels: 10,

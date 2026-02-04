@@ -1,5 +1,6 @@
 import base64
 import io
+import logging
 import os
 import traceback
 from datetime import datetime
@@ -13,12 +14,25 @@ from app.gcode_utils import gcode_output
 from app.job_creation import process_job
 from app.models import AirbrushJobRequest, AirbrushJobResponse
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+sentry_dsn = os.getenv("SENTRY_DSN", "")
+logger.debug(f"SENTRY_DSN is {'set' if sentry_dsn else 'NOT set'}")
+if sentry_dsn:
+    logger.debug(f"SENTRY_DSN starts with: {sentry_dsn[:20]}...")
+
 sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN", ""),
+    dsn=sentry_dsn,
     enable_tracing=True,
     traces_sample_rate=0.1,
+    debug=True,
 )
 sentry_sdk.set_level("info")
+
+client = sentry_sdk.get_client()
+logger.debug(f"Sentry client is_active: {client.is_active()}")
+logger.debug(f"Sentry DSN configured: {client.dsn}")
 
 app = FastAPI(title="Airbrush Web API", version="0.1.0")
 
@@ -68,6 +82,10 @@ async def generate_gcode(request: AirbrushJobRequest) -> AirbrushJobResponse:
         )
 
         image = decode_base64_image(request.image_base64)
+
+        image_buffer = io.BytesIO()
+        image.save(image_buffer, format="PNG")
+        scope.add_attachment(bytes=image_buffer.getvalue(), filename=request.filename)
 
         result = process_job(
             job=request,
