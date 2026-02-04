@@ -205,6 +205,7 @@ def process_job(
                 + row_footer
             )
 
+        row_commands.append(GcodeCommand(command='M98 P"/macros/check_line_pause.g"'))
         gcode_objects.extend(row_commands)
 
     if add_headers:
