@@ -14,7 +14,7 @@ from app.job_creation import process_job
 from app.models import AirbrushJobRequest, AirbrushJobResponse
 
 sentry_sdk.init(
-    dsn=os.getenv("MATR_PROD_SENTRY_DSN", ""),
+    dsn=os.getenv("SENTRY_DSN", ""),
     enable_tracing=True,
     traces_sample_rate=0.1,
 )
