@@ -16,7 +16,7 @@ class JobResult:
 
 
 def generate_bounding_box_gcode(
-    job: AirbrushJobRequest, box_z: float
+    job: AirbrushJobRequest, box_z: float, ab_max_mm: float
 ) -> list[GcodeCommand | GcodePoint]:
     """Generate G-code commands to draw a bounding box around the print area."""
     image_start_x = job.job_location[0]
@@ -35,7 +35,7 @@ def generate_bounding_box_gcode(
         GcodeCommand(command="M42 P1 S1; Turn on Air"),
         GcodeCommand(command="G4 S0.25 ; Dwell to allow air to stabilize"),
         GcodePoint(type="G1", z=box_z),
-        GcodePoint(type="G0", u=job.ab_max),
+        GcodePoint(type="G0", u=ab_max_mm),
         GcodePoint(type="G1", x=image_end_x, y=image_start_y),
         GcodePoint(type="G1", x=image_end_x, y=image_end_y),
         GcodePoint(type="G1", x=image_start_x, y=image_end_y),
@@ -58,6 +58,10 @@ def process_job(
     add_headers: bool = True,
 ) -> JobResult:
     """Process a single job and return gcode objects and preview image."""
+    # Convert ab_min/ab_max from microns to mm
+    ab_min_mm = job.ab_min / 1000
+    ab_max_mm = job.ab_max / 1000
+
     if job.enable_gradient_border:
         border_width = int(job.gradient_border_width)
         content_size = (
@@ -126,7 +130,7 @@ def process_job(
 
         x_step_pixels = int(job.x_step_distance)
         x_values = (np.arange(image_np.shape[1]) + image_start_x)[::x_step_pixels]
-        u_values = (image_np[row, :] / 255 * (job.ab_max - job.ab_min) + job.ab_min)[
+        u_values = (image_np[row, :] / 255 * (ab_max_mm - ab_min_mm) + ab_min_mm)[
             ::x_step_pixels
         ]
 
@@ -212,7 +216,7 @@ def process_job(
 
         bounding_box_commands: list[GcodeCommand | GcodePoint] = []
         if add_bounding_box:
-            bounding_box_commands = generate_bounding_box_gcode(job, bounding_box_z)
+            bounding_box_commands = generate_bounding_box_gcode(job, bounding_box_z, ab_max_mm)
 
         header = [
             GcodePoint(type="G0", x=pass_start_x, y=first_with_y.y),

@@ -14,6 +14,7 @@ export const defaultParams: AirbrushParams = {
   gaussian_blur_radius: 2,
   print_direction: 'bottom_to_top',
   enable_gradient_border: false,
-  gradient_border_width: 40,
+  gradient_border_width: 20,
   gradient_levels: 10,
+  draw_bounding_box: false,
 };

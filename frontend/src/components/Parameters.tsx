@@ -30,6 +30,7 @@ export interface AirbrushParams {
   enable_gradient_border: boolean;
   gradient_border_width: number;
   gradient_levels: number;
+  draw_bounding_box: boolean;
 }
 
 interface ParametersProps {
@@ -345,6 +346,20 @@ export function Parameters({
                 </div>
               </div>
             )}
+
+            <Separator className="my-1" />
+
+            {/* Bounding Box */}
+            <div className="flex items-center gap-2 px-2">
+              <Checkbox
+                id="draw_bounding_box"
+                checked={params.draw_bounding_box}
+                onCheckedChange={(checked) =>
+                  handleParamChange('draw_bounding_box', checked === true)
+                }
+              />
+              <Label htmlFor="draw_bounding_box">Draw Bounding Box</Label>
+            </div>
 
           </div>
         </div>

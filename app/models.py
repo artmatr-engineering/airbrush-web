@@ -56,6 +56,10 @@ class AirbrushJobRequest(BaseModel):
     gradient_levels: int = Field(
         default=10, description="Number of grey levels in gradient border"
     )
+    draw_bounding_box: bool = Field(
+        default=False,
+        description="If True, draw a bounding box around the print area before printing",
+    )
 
 
 class AirbrushJobResponse(BaseModel):

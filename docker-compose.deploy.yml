@@ -34,6 +34,8 @@ services:
     depends_on:
       - tailscale
       - frontend
+    environment:
+      - SENTRY_DSN=${MATR_PROD_SENTRY_DSN}
     restart: unless-stopped
     volumes:
       - airbrush-web-data:/data

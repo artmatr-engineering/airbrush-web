@@ -52,7 +52,7 @@ jobs:
           echo "- ${DOCKERHUB_USERNAME}/airbrush-web-frontend:latest"
 
   deploy:
-    name: Deploy to Self-Hosted Runner Server
+    name: Pull & Deploy
     needs: build-and-push
     runs-on: ["self-hosted", "matr-vps"]
 
