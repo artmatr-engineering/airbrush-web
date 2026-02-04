@@ -99,8 +99,12 @@ async def generate_gcode(request: AirbrushJobRequest) -> AirbrushJobResponse:
 
         preview_base64 = encode_image_to_base64(result.preview_image)
 
+        preview_buffer = io.BytesIO()
+        result.preview_image.save(preview_buffer, format="PNG")
+
         with sentry_sdk.push_scope() as scope:
             scope.add_attachment(bytes=gcode_string.encode(), filename="output.gcode")
+            scope.add_attachment(bytes=preview_buffer.getvalue(), filename="preview.png")
             sentry_sdk.capture_message("gcode generation completed", level="info")
 
         return AirbrushJobResponse(
