@@ -8,7 +8,7 @@ services:
       platform: linux/arm64
       args:
         DOCKER_BUILDKIT: 1
-    image: ${DOCKERHUB_USERNAME}/web-app-template-frontend:latest
+    image: ${DOCKERHUB_USERNAME}/airbrush-web-frontend:latest
 
   backend:
     build:
@@ -17,11 +17,11 @@ services:
       platform: linux/arm64
       args:
         DOCKER_BUILDKIT: 1
-    image: ${DOCKERHUB_USERNAME}/web-app-template-backend:latest
+    image: ${DOCKERHUB_USERNAME}/airbrush-web-backend:latest
     depends_on:
       - frontend
     volumes:
-      - web-app-template-data:/data
+      - airbrush-web-data:/data
 
 volumes:
-  web-app-template-data:
+  airbrush-web-data:

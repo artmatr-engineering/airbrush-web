@@ -1,4 +1,4 @@
-name: deploy-web-app-template
+name: deploy-airbrush-web
 on:
   push:
     branches: [main]
@@ -28,7 +28,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/web-app-template-backend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/airbrush-web-backend:latest
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
@@ -39,7 +39,7 @@ jobs:
           file: ./frontend/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/web-app-template-frontend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/airbrush-web-frontend:latest
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
@@ -48,8 +48,8 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           echo "Successfully built and pushed:"
-          echo "- ${DOCKERHUB_USERNAME}/web-app-template-backend:latest"
-          echo "- ${DOCKERHUB_USERNAME}/web-app-template-frontend:latest"
+          echo "- ${DOCKERHUB_USERNAME}/airbrush-web-backend:latest"
+          echo "- ${DOCKERHUB_USERNAME}/airbrush-web-frontend:latest"
 
   deploy:
     name: Deploy to Self-Hosted Runner Server
