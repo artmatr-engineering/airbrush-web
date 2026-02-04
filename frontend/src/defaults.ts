@@ -16,4 +16,5 @@ export const defaultParams: AirbrushParams = {
   enable_gradient_border: false,
   gradient_border_width: 40,
   gradient_levels: 10,
+  draw_bounding_box: false,
 };

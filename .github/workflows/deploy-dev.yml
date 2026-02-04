@@ -1,4 +1,4 @@
-name: deploy--dev
+name: deploy-airbrush-web-dev
 on:
   push:
     branches: [dev]
@@ -52,7 +52,7 @@ jobs:
           echo "- ${DOCKERHUB_USERNAME}/airbrush-web-frontend:latest"
 
   deploy:
-    name: Deploy to Dev Environment
+    name: Pull & Deploy
     needs: build-and-push
     runs-on: ["self-hosted", "matr-vps"]
 
