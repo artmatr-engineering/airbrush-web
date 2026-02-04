@@ -78,6 +78,7 @@ jobs:
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           TS_AUTHKEY: ${{ secrets.TS_AUTHKEY }}
+          MATR_DEV_SENTRY_DSN: ${{ secrets.MATR_DEV_SENTRY_DSN }}
         run: |
           # Pull latest images
           docker compose -f docker-compose.dev.yml pull

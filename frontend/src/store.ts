@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { AirbrushParams } from '@/components/Parameters';
 import type { ViewerTab } from '@/components/BottomBar';
 import { defaultParams } from '@/defaults';
@@ -28,33 +29,41 @@ const getDefaultOutputFilename = (filename: string) => {
   return `${nameWithoutExt}_AB.nc`;
 };
 
-export const useAppStore = create<AppState>((set) => ({
-  imageBase64: null,
-  filename: '',
-  outputFilename: '',
-  params: defaultParams,
-  isGenerating: false,
-  viewerTab: 'upload',
-  previewImageBase64: null,
-  gcode: null,
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      imageBase64: null,
+      filename: '',
+      outputFilename: '',
+      params: defaultParams,
+      isGenerating: false,
+      viewerTab: 'upload',
+      previewImageBase64: null,
+      gcode: null,
 
-  setImageUpload: (base64, name) =>
-    set({
-      imageBase64: base64,
-      filename: name,
-      outputFilename: getDefaultOutputFilename(name),
-      viewerTab: 'input',
+      setImageUpload: (base64, name) =>
+        set({
+          imageBase64: base64,
+          filename: name,
+          outputFilename: getDefaultOutputFilename(name),
+          viewerTab: 'input',
+        }),
+
+      setOutputFilename: (name) => set({ outputFilename: name }),
+
+      setParams: (params) => set({ params }),
+
+      setIsGenerating: (isGenerating) => set({ isGenerating }),
+
+      setViewerTab: (tab) => set({ viewerTab: tab }),
+
+      setPreviewImageBase64: (base64) => set({ previewImageBase64: base64 }),
+
+      setGcode: (gcode) => set({ gcode }),
     }),
-
-  setOutputFilename: (name) => set({ outputFilename: name }),
-
-  setParams: (params) => set({ params }),
-
-  setIsGenerating: (isGenerating) => set({ isGenerating }),
-
-  setViewerTab: (tab) => set({ viewerTab: tab }),
-
-  setPreviewImageBase64: (base64) => set({ previewImageBase64: base64 }),
-
-  setGcode: (gcode) => set({ gcode }),
-}));
+    {
+      name: 'airbrush-params',
+      partialize: (state) => ({ params: state.params }),
+    }
+  )
+);
