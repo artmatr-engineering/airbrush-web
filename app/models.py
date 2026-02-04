@@ -20,10 +20,10 @@ class AirbrushJobRequest(BaseModel):
         default=(6, 6), description="Overspray distance (before, after) in mm"
     )
     y_step_distance: float = Field(
-        default=0.5, description="Distance between each Y line in mm"
+        default=1, description="Distance between each Y line in mm"
     )
     x_step_distance: float = Field(
-        default=1.0, description="Distance between each X step in mm"
+        default=2.0, description="Distance between each X step in mm"
     )
     ab_min: float = Field(
         default=0, description="Minimum airbrush valve value in microns (white areas)"
@@ -32,7 +32,7 @@ class AirbrushJobRequest(BaseModel):
         default=500, description="Maximum airbrush valve value in microns (dark areas)"
     )
     z: float = Field(default=15, description="Z position in mm")
-    feedrate: float = Field(default=4000, description="Feedrate in mm/min")
+    feedrate: float = Field(default=8000, description="Feedrate in mm/min")
     gaussian_blur_radius: float = Field(
         default=3, description="Gaussian blur radius in pixels"
     )
