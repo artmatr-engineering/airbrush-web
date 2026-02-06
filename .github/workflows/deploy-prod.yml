@@ -69,7 +69,7 @@ jobs:
       - name: Stop and remove existing containers
         run: |
           # Stop and remove containers if they exist (preserve volumes)
-          docker compose -f docker-compose.deploy.yml down --remove-orphans || true
+          docker compose -p airbrush-web -f docker-compose.deploy.yml down --remove-orphans || true
 
           # Remove any dangling images to free up space
           docker image prune -f || true
@@ -78,12 +78,13 @@ jobs:
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           TS_AUTHKEY: ${{ secrets.TS_AUTHKEY }}
+          MATR_PROD_SENTRY_DSN: ${{ secrets.MATR_PROD_SENTRY_DSN }}
         run: |
           # Pull latest images
-          docker compose -f docker-compose.deploy.yml pull
+          docker compose -p airbrush-web -f docker-compose.deploy.yml pull
 
           # Start the application with pulled images
-          docker compose -f docker-compose.deploy.yml up -d
+          docker compose -p airbrush-web -f docker-compose.deploy.yml up -d
 
       - name: Verify deployment
         run: |
@@ -91,7 +92,7 @@ jobs:
           sleep 10
 
           # Check if containers are running
-          docker compose -f docker-compose.deploy.yml ps
+          docker compose -p airbrush-web -f docker-compose.deploy.yml ps
 
           # Optional: Check if services are responding
           # curl -f http://localhost:9090/health || echo "Backend health check failed"
@@ -106,8 +107,8 @@ jobs:
         if: failure()
         run: |
           echo "=== Container Status ==="
-          docker compose -f docker-compose.deploy.yml ps
+          docker compose -p airbrush-web -f docker-compose.deploy.yml ps
           echo "=== Backend Logs ==="
-          docker compose -f docker-compose.deploy.yml logs backend
+          docker compose -p airbrush-web -f docker-compose.deploy.yml logs backend
           echo "=== Frontend Logs ==="
-          docker compose -f docker-compose.deploy.yml logs frontend
+          docker compose -p airbrush-web -f docker-compose.deploy.yml logs frontend
