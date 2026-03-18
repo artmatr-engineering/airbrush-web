@@ -70,8 +70,7 @@ async def ping():
     return {"status": "ok", "timestamp": datetime.now().isoformat()}
 
 
-@app.post("/generate", response_model=AirbrushJobResponse)
-async def generate_gcode(request: AirbrushJobRequest) -> AirbrushJobResponse:
+async def _generate_gcode_response(request: AirbrushJobRequest) -> AirbrushJobResponse:
     """Generate G-code from an image and job parameters."""
     try:
         scope = sentry_sdk.get_current_scope()
@@ -116,3 +115,8 @@ async def generate_gcode(request: AirbrushJobRequest) -> AirbrushJobResponse:
         traceback.print_exc()
         sentry_sdk.capture_exception(e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate", response_model=AirbrushJobResponse)
+async def generate_gcode(request: AirbrushJobRequest) -> AirbrushJobResponse:
+    return await _generate_gcode_response(request)

@@ -3,6 +3,7 @@ import type { AirbrushParams } from '@/components/Parameters';
 export const defaultParams: AirbrushParams = {
   job_size: [1000, 1000],
   job_location: [0, 0],
+  job_origin_corner: 'upper_left',
   print_channel: 'GRAYSCALE',
   padding_distance: 75,
   ramp_distances: [6, 6],

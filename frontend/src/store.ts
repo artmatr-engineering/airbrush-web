@@ -29,6 +29,11 @@ const getDefaultOutputFilename = (filename: string) => {
   return `${nameWithoutExt}_AB.nc`;
 };
 
+const clearGeneratedOutput = {
+  gcode: null,
+  previewImageBase64: null,
+};
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -42,16 +47,22 @@ export const useAppStore = create<AppState>()(
       gcode: null,
 
       setImageUpload: (base64, name) =>
-        set({
+        set(() => ({
           imageBase64: base64,
           filename: name,
           outputFilename: getDefaultOutputFilename(name),
+          ...clearGeneratedOutput,
           viewerTab: 'input',
-        }),
+        })),
 
       setOutputFilename: (name) => set({ outputFilename: name }),
 
-      setParams: (params) => set({ params }),
+      setParams: (params) =>
+        set((state) => ({
+          params,
+          ...clearGeneratedOutput,
+          viewerTab: state.viewerTab === 'preview' ? 'input' : state.viewerTab,
+        })),
 
       setIsGenerating: (isGenerating) => set({ isGenerating }),
 
@@ -64,6 +75,18 @@ export const useAppStore = create<AppState>()(
     {
       name: 'airbrush-params',
       partialize: (state) => ({ params: state.params }),
+      merge: (persistedState, currentState) => {
+        const typedPersistedState = persistedState as Partial<AppState> | undefined;
+
+        return {
+          ...currentState,
+          ...typedPersistedState,
+          params: {
+            ...currentState.params,
+            ...typedPersistedState?.params,
+          },
+        };
+      },
     }
   )
 );
