@@ -17,6 +17,7 @@ import { useAppStore } from '@/store';
 export interface AirbrushParams {
   job_size: [number, number];
   job_location: [number, number];
+  job_origin_corner: 'upper_left' | 'lower_left';
   print_channel: 'C' | 'M' | 'Y' | 'K' | 'GRAYSCALE';
   padding_distance: number;
   ramp_distances: [number, number];
@@ -104,6 +105,28 @@ export function Parameters({
                   className="h-9 w-full"
                 />
               </div>
+            </div>
+
+            {/* Job Origin Corner */}
+            <div className="flex flex-col gap-1 px-2">
+              <Label htmlFor="job_origin_corner">Reference Corner</Label>
+              <Select
+                value={params.job_origin_corner}
+                onValueChange={(value) =>
+                  handleParamChange(
+                    'job_origin_corner',
+                    value as AirbrushParams['job_origin_corner']
+                  )
+                }
+              >
+                <SelectTrigger id="job_origin_corner">
+                  <SelectValue placeholder="Select corner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="upper_left">Upper-Left</SelectItem>
+                  <SelectItem value="lower_left">Lower-Left</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Job Location */}

@@ -10,6 +10,10 @@ class AirbrushJobRequest(BaseModel):
     job_location: tuple[float, float] = Field(
         default=(0, 0), description="Job location (x, y) in mm"
     )
+    job_origin_corner: Literal['upper_left', 'lower_left'] = Field(
+        default='upper_left',
+        description='Reference corner used for the job location coordinates',
+    )
     print_channel: Literal["C", "M", "Y", "K", "GRAYSCALE"] = Field(
         default="GRAYSCALE", description="CMYK channel or GRAYSCALE"
     )

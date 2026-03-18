@@ -64,6 +64,18 @@ export const useAppStore = create<AppState>()(
     {
       name: 'airbrush-params',
       partialize: (state) => ({ params: state.params }),
+      merge: (persistedState, currentState) => {
+        const typedPersistedState = persistedState as Partial<AppState> | undefined;
+
+        return {
+          ...currentState,
+          ...typedPersistedState,
+          params: {
+            ...currentState.params,
+            ...typedPersistedState?.params,
+          },
+        };
+      },
     }
   )
 );
