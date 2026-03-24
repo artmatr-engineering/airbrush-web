@@ -1,4 +1,5 @@
 from PIL import Image
+import pytest
 
 from app.job_creation import generate_bounding_box_gcode, process_job
 from app.models import AirbrushJobRequest
@@ -50,10 +51,23 @@ def extract_bbox_points(job: AirbrushJobRequest) -> list[tuple[float, float]]:
     ]
 
 
-def test_print_direction_changes_row_order_without_moving_image():
+@pytest.mark.parametrize(
+    ("job_origin_corner", "expected_rows"),
+    [
+        ("upper_left", [16.5, 17.5, 18.5, 19.5]),
+        ("lower_left", [20.5, 21.5, 22.5, 23.5]),
+    ],
+)
+def test_print_direction_changes_row_order_without_moving_image(
+    job_origin_corner: str, expected_rows: list[float]
+):
     image = Image.new("L", (6, 4), color=128)
-    bottom_to_top_job = make_job(print_direction="bottom_to_top")
-    top_to_bottom_job = make_job(print_direction="top_to_bottom")
+    bottom_to_top_job = make_job(
+        print_direction="bottom_to_top", job_origin_corner=job_origin_corner
+    )
+    top_to_bottom_job = make_job(
+        print_direction="top_to_bottom", job_origin_corner=job_origin_corner
+    )
 
     bottom_to_top_result = process_job(
         bottom_to_top_job,
@@ -73,14 +87,19 @@ def test_print_direction_changes_row_order_without_moving_image():
     bottom_to_top_rows = extract_row_start_ys(bottom_to_top_result.gcode_objects)
     top_to_bottom_rows = extract_row_start_ys(top_to_bottom_result.gcode_objects)
 
-    assert bottom_to_top_rows == [20.5, 21.5, 22.5, 23.5]
+    assert bottom_to_top_rows == expected_rows
     assert top_to_bottom_rows == list(reversed(bottom_to_top_rows))
     assert sorted(bottom_to_top_rows) == sorted(top_to_bottom_rows)
 
 
-def test_job_location_is_the_only_position_input_in_geometry():
-    job = make_job(print_direction="top_to_bottom")
-    shifted_job = make_job(print_direction="top_to_bottom", job_location=(13, 37))
+@pytest.mark.parametrize("job_origin_corner", ["upper_left", "lower_left"])
+def test_job_location_is_the_only_position_input_in_geometry(job_origin_corner: str):
+    job = make_job(print_direction="top_to_bottom", job_origin_corner=job_origin_corner)
+    shifted_job = make_job(
+        print_direction="top_to_bottom",
+        job_origin_corner=job_origin_corner,
+        job_location=(13, 37),
+    )
 
     base_bbox = extract_bbox_points(job)
     shifted_bbox = extract_bbox_points(shifted_job)

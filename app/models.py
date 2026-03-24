@@ -8,7 +8,11 @@ class AirbrushJobRequest(BaseModel):
     filename: str = Field(default="input_image.png", description="Original filename")
     job_size: tuple[int, int] = Field(description="Target size (width_mm, height_mm)")
     job_location: tuple[float, float] = Field(
-        default=(0, 0), description="Lower-left image anchor (x, y) in mm"
+        default=(0, 0), description="Job location (x, y) in mm, interpreted by job_origin_corner"
+    )
+    job_origin_corner: Literal['upper_left', 'lower_left'] = Field(
+        default='upper_left',
+        description='Reference corner used for the job location coordinates',
     )
     print_channel: Literal["C", "M", "Y", "K", "GRAYSCALE"] = Field(
         default="GRAYSCALE", description="CMYK channel or GRAYSCALE"

@@ -15,10 +15,15 @@ class JobResult:
     preview_image: Image.Image
 
 
-def get_image_y_bounds(job: AirbrushJobRequest) -> tuple[float, float]:
+def get_job_y_bounds(job: AirbrushJobRequest) -> tuple[float, float]:
     """Return the fixed Y span occupied by the image in machine space."""
-    image_start_y = job.job_location[1]
-    image_end_y = image_start_y + job.job_size[1]
+    if job.job_origin_corner == "lower_left":
+        image_start_y = job.job_location[1]
+        image_end_y = image_start_y + job.job_size[1]
+    else:
+        image_end_y = job.job_location[1]
+        image_start_y = image_end_y - job.job_size[1]
+
     return image_start_y, image_end_y
 
 
@@ -40,7 +45,7 @@ def generate_bounding_box_gcode(
     """Generate G-code commands to draw a bounding box around the print area."""
     image_start_x = job.job_location[0]
     image_end_x = image_start_x + job.job_size[0]
-    image_start_y, image_end_y = get_image_y_bounds(job)
+    image_start_y, image_end_y = get_job_y_bounds(job)
 
     box_commands = [
         GcodePoint(type="G0", x=image_start_x, y=image_start_y),
@@ -104,7 +109,7 @@ def process_job(
 
     image_start_x = job.job_location[0]
     image_end_x = image_start_x + job.job_size[0]
-    image_start_y, image_end_y = get_image_y_bounds(job)
+    image_start_y, image_end_y = get_job_y_bounds(job)
 
     pass_start_x = image_start_x - job.padding_distance
     ramp_start_x = image_start_x - job.ramp_distances[0]
