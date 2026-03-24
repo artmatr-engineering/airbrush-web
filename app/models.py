@@ -8,7 +8,7 @@ class AirbrushJobRequest(BaseModel):
     filename: str = Field(default="input_image.png", description="Original filename")
     job_size: tuple[int, int] = Field(description="Target size (width_mm, height_mm)")
     job_location: tuple[float, float] = Field(
-        default=(0, 0), description="Job location (x, y) in mm"
+        default=(0, 0), description="Job location (x, y) in mm, interpreted by job_origin_corner"
     )
     job_origin_corner: Literal['upper_left', 'lower_left'] = Field(
         default='upper_left',
@@ -41,7 +41,7 @@ class AirbrushJobRequest(BaseModel):
         default=3, description="Gaussian blur radius in pixels"
     )
     print_direction: Literal["bottom_to_top", "top_to_bottom"] = Field(
-        default="bottom_to_top", description="Print direction"
+        default="bottom_to_top", description="Row traversal order only"
     )
     kill_air_at_right: bool = Field(
         default=False,

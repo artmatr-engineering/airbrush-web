@@ -130,5 +130,4 @@ def test_generate_gcode_with_lower_left_reference_corner(client, sample_image_ba
 
     gcode_lines = response.json()["gcode"].splitlines()
     assert "G0 X-65 Y69.5" in gcode_lines
-    assert "G1 X10 U0.5" in gcode_lines
-    assert "G1 X60 Y70" in gcode_lines or "G1 X60 Y70.0" in gcode_lines
+    assert "G0 X-65 Y20.5" in gcode_lines
