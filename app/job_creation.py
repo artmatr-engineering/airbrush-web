@@ -15,19 +15,32 @@ class JobResult:
     preview_image: Image.Image
 
 
+def get_image_y_bounds(job: AirbrushJobRequest) -> tuple[float, float]:
+    """Return the fixed Y span occupied by the image in machine space."""
+    image_start_y = job.job_location[1]
+    image_end_y = image_start_y + job.job_size[1]
+    return image_start_y, image_end_y
+
+
+def get_row_y_location(
+    job: AirbrushJobRequest,
+    row: int,
+    image_start_y: float,
+    image_end_y: float,
+) -> float:
+    """Return the Y centerline for a row without changing the anchored image span."""
+    if job.print_direction == "bottom_to_top":
+        return image_start_y + row * job.y_step_distance + job.y_step_distance / 2
+    return image_end_y - row * job.y_step_distance - job.y_step_distance / 2
+
+
 def generate_bounding_box_gcode(
     job: AirbrushJobRequest, box_z: float, ab_max_mm: float
 ) -> list[GcodeCommand | GcodePoint]:
     """Generate G-code commands to draw a bounding box around the print area."""
     image_start_x = job.job_location[0]
     image_end_x = image_start_x + job.job_size[0]
-
-    if job.print_direction == "bottom_to_top":
-        image_start_y = job.job_location[1]
-        image_end_y = image_start_y + job.job_size[1]
-    else:
-        image_start_y = job.job_location[1] - job.job_size[1]
-        image_end_y = job.job_location[1]
+    image_start_y, image_end_y = get_image_y_bounds(job)
 
     box_commands = [
         GcodePoint(type="G0", x=image_start_x, y=image_start_y),
@@ -91,6 +104,7 @@ def process_job(
 
     image_start_x = job.job_location[0]
     image_end_x = image_start_x + job.job_size[0]
+    image_start_y, image_end_y = get_image_y_bounds(job)
 
     pass_start_x = image_start_x - job.padding_distance
     ramp_start_x = image_start_x - job.ramp_distances[0]
@@ -115,18 +129,7 @@ def process_job(
     gcode_objects: list[GcodeCommand | GcodePoint] = []
 
     for row in range(image_np.shape[0]):
-        if job.print_direction == "bottom_to_top":
-            y_location = (
-                job.job_location[1]
-                + row * job.y_step_distance
-                + job.y_step_distance / 2
-            )
-        else:
-            y_location = (
-                job.job_location[1]
-                - row * job.y_step_distance
-                - job.y_step_distance / 2
-            )
+        y_location = get_row_y_location(job, row, image_start_y, image_end_y)
 
         x_step_pixels = int(job.x_step_distance)
         x_values = (np.arange(image_np.shape[1]) + image_start_x)[::x_step_pixels]
