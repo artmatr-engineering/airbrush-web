@@ -51,3 +51,5 @@ htmlcov/
 /frontend/lerna-debug.log*
 
 source_material
+.DS_Store
+.DS_Store
