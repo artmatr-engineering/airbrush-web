@@ -215,7 +215,7 @@ def process_vector_job(job: AirbrushVectorJobRequest) -> list[GcodeCommand | Gco
     job_gcodes: list[GcodeCommand | GcodePoint] = [
         GcodeCommand(command="G21 ;mm units"),
         GcodeCommand(command="M42 P1 S1; Turn on Air"),
-        GcodePoint(type="G0", x=job.job_location[0], y=image_end_y),
+        # GcodePoint(type="G0", x=job.job_location[0], y=image_end_y),
         GcodePoint(type="G1", z=job.z),
         GcodeCommand(command=f"G1 F{job.feedrate}"),
         GcodePoint(type="G1", u=0),
