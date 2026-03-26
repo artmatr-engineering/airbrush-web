@@ -12,7 +12,12 @@ import sentry_sdk
 
 from app.gcode_utils import gcode_output
 from app.job_creation import process_job
-from app.models import AirbrushJobRequest, AirbrushJobResponse
+from app.models import (
+    AirbrushJobRequest,
+    AirbrushJobResponse,
+    AirbrushVectorJobRequest,
+    AirbrushVectorJobResponse,
+)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -120,3 +125,43 @@ async def _generate_gcode_response(request: AirbrushJobRequest) -> AirbrushJobRe
 @app.post("/generate", response_model=AirbrushJobResponse)
 async def generate_gcode(request: AirbrushJobRequest) -> AirbrushJobResponse:
     return await _generate_gcode_response(request)
+
+
+async def _generate_vector_gcode_response(
+    request: AirbrushVectorJobRequest,
+) -> AirbrushVectorJobResponse:
+    """Generate G-code from SVG vector content and job parameters."""
+    try:
+        from app.vector_processing import process_vector_job
+
+        scope = sentry_sdk.get_current_scope()
+        scope.clear()
+        scope.add_attachment(
+            bytes=request.model_dump_json(exclude={"svg_string"}).encode(),
+            filename="in_vector_data.json",
+        )
+        scope.add_attachment(bytes=request.svg_string.encode("utf-8"), filename=request.filename)
+
+        gcode_objects = process_vector_job(request)
+        gcode_lines = gcode_output(gcode_objects, enable_axis_culling=False)
+        gcode_string = "\n".join(gcode_lines)
+
+        with sentry_sdk.push_scope() as scope:
+            scope.add_attachment(bytes=gcode_string.encode(), filename="output_vector.gcode")
+            sentry_sdk.capture_message("vector gcode generation completed", level="info")
+
+        return AirbrushVectorJobResponse(
+            gcode=gcode_string,
+            total_lines=len(gcode_lines),
+        )
+    except Exception as e:
+        traceback.print_exc()
+        sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate-vector", response_model=AirbrushVectorJobResponse)
+async def generate_vector_gcode(
+    request: AirbrushVectorJobRequest,
+) -> AirbrushVectorJobResponse:
+    return await _generate_vector_gcode_response(request)

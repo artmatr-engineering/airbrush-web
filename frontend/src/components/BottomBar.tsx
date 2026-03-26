@@ -7,6 +7,8 @@ interface BottomBarProps {
   setViewerTab: (tab: ViewerTab) => void;
   hasInputImage: boolean;
   hasPreviewImage: boolean;
+  inputLabel?: string;
+  previewLabel?: string;
 }
 
 export function BottomBar({
@@ -14,6 +16,8 @@ export function BottomBar({
   setViewerTab,
   hasInputImage,
   hasPreviewImage,
+  inputLabel = 'Input Image',
+  previewLabel = 'Preview Image',
 }: BottomBarProps) {
   return (
     <div className="flex items-center justify-center px-4 py-3 border-t bg-background">
@@ -21,10 +25,10 @@ export function BottomBar({
         <TabsList>
           <TabsTrigger value="upload">Upload</TabsTrigger>
           <TabsTrigger value="input" disabled={!hasInputImage}>
-            Input Image
+            {inputLabel}
           </TabsTrigger>
           <TabsTrigger value="preview" disabled={!hasPreviewImage}>
-            Preview Image
+            {previewLabel}
           </TabsTrigger>
         </TabsList>
       </Tabs>

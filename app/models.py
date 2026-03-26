@@ -67,9 +67,45 @@ class AirbrushJobRequest(BaseModel):
     )
 
 
+class AirbrushVectorJobRequest(BaseModel):
+    svg_string: str = Field(description="Raw SVG file content as a string")
+    filename: str = Field(default="input.svg", description="Original SVG filename")
+    job_size: tuple[int, int] = Field(description="Target size (width_mm, height_mm)")
+    job_location: tuple[float, float] = Field(
+        default=(0, 0), description="Job location (x, y) in mm, interpreted by job_origin_corner"
+    )
+    job_origin_corner: Literal["upper_left", "lower_left"] = Field(
+        default="upper_left",
+        description="Reference corner used for the job location coordinates",
+    )
+    ramp_distances: tuple[float, float] = Field(
+        default=(3, 3), description="Ramp distances (before, after) in mm for each path"
+    )
+    ab_min: float = Field(
+        default=0, description="Minimum airbrush valve value in microns"
+    )
+    ab_max: float = Field(
+        default=500, description="Maximum airbrush valve value in microns"
+    )
+    darkness: int = Field(
+        default=100, description="Darkness level (0-100) applied to vector paths"
+    )
+    z: float = Field(default=15, description="Z position in mm")
+    feedrate: float = Field(default=8000, description="Feedrate in mm/min")
+    optimize_toolpath: bool = Field(
+        default=True,
+        description="If True, optimize vector path order before G-code generation",
+    )
+
+
 class AirbrushJobResponse(BaseModel):
     gcode: str = Field(description="Generated G-code as a string")
     preview_image_base64: str = Field(
         description="Base64-encoded preview image (grayscale or CMYK channel)"
     )
+    total_lines: int = Field(description="Total number of G-code lines generated")
+
+
+class AirbrushVectorJobResponse(BaseModel):
+    gcode: str = Field(description="Generated G-code as a string")
     total_lines: int = Field(description="Total number of G-code lines generated")
