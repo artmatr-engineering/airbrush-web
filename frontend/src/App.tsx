@@ -3,8 +3,9 @@ import { ImageDropzone } from '@/components/ImageDropzone';
 import { ImageViewer } from '@/components/ImageViewer';
 import { BottomBar } from '@/components/BottomBar';
 import { useAppStore } from '@/store';
+import { VectorApp } from '@/VectorApp';
 
-function App() {
+function RasterApp() {
   const {
     imageBase64,
     filename,
@@ -110,6 +111,13 @@ function App() {
       </div>
     </div>
   );
+}
+
+function App() {
+  if (window.location.pathname.startsWith('/vector')) {
+    return <VectorApp />;
+  }
+  return <RasterApp />;
 }
 
 export default App;
