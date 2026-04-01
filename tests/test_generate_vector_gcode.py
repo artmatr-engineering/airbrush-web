@@ -67,3 +67,32 @@ def test_generate_vector_gcode_origin_corner_changes_y_position(client, sample_s
 def test_generate_vector_gcode_missing_required_fields(client):
     response = client.post("/generate-vector", json={"job_size": [100, 100]})
     assert response.status_code == 422
+
+
+def test_generate_vector_gcode_ramps_u_values(client, sample_svg_string):
+    payload = {
+        "svg_string": sample_svg_string,
+        "job_size": [10, 10],
+        "ramp_distances": [2, 2],
+        "darkness": 50,
+        "ab_min": 100,
+        "ab_max": 500,
+        "optimize_toolpath": False,
+    }
+
+    response = client.post("/generate-vector", json=payload)
+    assert response.status_code == 200
+
+    gcode_lines = response.json()["gcode"].splitlines()
+    path_point_lines = [
+        line
+        for line in gcode_lines
+        if line.startswith("X") and "Y" in line and "U" in line
+    ]
+
+    assert path_point_lines == [
+        "X-2 Y0 U0.1",
+        "X0 Y0 U0.3",
+        "X10 Y0 U0.3",
+        "X12 Y0 U0.1",
+    ]

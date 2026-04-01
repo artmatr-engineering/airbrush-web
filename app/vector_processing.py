@@ -231,16 +231,35 @@ def process_vector_job(job: AirbrushVectorJobRequest) -> list[GcodeCommand | Gco
         if len(points_2d) < 2:
             continue
 
-        u_values = np.full((points_2d.shape[0], 1), 0.0)
-        points_3d = np.hstack((points_2d, u_values))
+        seg_lengths = np.sqrt(np.sum(np.diff(points_2d, axis=0) ** 2, axis=1))
+        cumulative_distances = np.insert(np.cumsum(seg_lengths), 0, 0.0)
+        total_distance = cumulative_distances[-1]
 
-        u_value = (ab_max_mm - ab_min_mm) * (job.darkness / 100)
-        if points_3d.shape[0] == 2:
-            points_3d[0][2] = u_value
-            points_3d[1][2] = u_value
-        else:
-            points_3d[1][2] = u_value
-            points_3d[-2][2] = u_value
+        darkness_ratio = np.clip(job.darkness / 100, 0.0, 1.0)
+        u_target_mm = ab_min_mm + ((ab_max_mm - ab_min_mm) * darkness_ratio)
+        u_delta_mm = u_target_mm - ab_min_mm
+
+        ramp_in_distance = max(job.ramp_distances[0], 0.0)
+        ramp_out_distance = max(job.ramp_distances[1], 0.0)
+
+        ramp_factor = np.ones_like(cumulative_distances)
+        if ramp_in_distance > 0:
+            ramp_factor = np.minimum(
+                ramp_factor,
+                np.clip(cumulative_distances / ramp_in_distance, 0.0, 1.0),
+            )
+        if ramp_out_distance > 0:
+            ramp_factor = np.minimum(
+                ramp_factor,
+                np.clip(
+                    (total_distance - cumulative_distances) / ramp_out_distance,
+                    0.0,
+                    1.0,
+                ),
+            )
+
+        u_values = (ab_min_mm + (u_delta_mm * ramp_factor)).reshape(-1, 1)
+        points_3d = np.hstack((points_2d, u_values))
 
         path_gcodes: list[GcodeCommand | GcodePoint] = [
             GcodeCommand(command=f"; Starting path {i + 1}/{len(polylines)}"),
