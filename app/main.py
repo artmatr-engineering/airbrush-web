@@ -55,7 +55,9 @@ def decode_base64_image(image_base64: str) -> Image.Image:
     if image_base64.startswith("data:image"):
         image_base64 = image_base64.split(",")[1]
     image_data = base64.b64decode(image_base64)
-    return Image.open(io.BytesIO(image_data))
+    image = Image.open(io.BytesIO(image_data))
+    image.load()
+    return image.convert("RGB")
 
 
 def encode_image_to_base64(image: Image.Image) -> str:
@@ -108,7 +110,9 @@ async def _generate_gcode_response(request: AirbrushJobRequest) -> AirbrushJobRe
 
         with sentry_sdk.push_scope() as scope:
             scope.add_attachment(bytes=gcode_string.encode(), filename="output.gcode")
-            scope.add_attachment(bytes=preview_buffer.getvalue(), filename="preview.png")
+            scope.add_attachment(
+                bytes=preview_buffer.getvalue(), filename="preview.png"
+            )
             sentry_sdk.capture_message("gcode generation completed", level="info")
 
         return AirbrushJobResponse(
@@ -140,15 +144,21 @@ async def _generate_vector_gcode_response(
             bytes=request.model_dump_json(exclude={"svg_string"}).encode(),
             filename="in_vector_data.json",
         )
-        scope.add_attachment(bytes=request.svg_string.encode("utf-8"), filename=request.filename)
+        scope.add_attachment(
+            bytes=request.svg_string.encode("utf-8"), filename=request.filename
+        )
 
         gcode_objects = process_vector_job(request)
         gcode_lines = gcode_output(gcode_objects, enable_axis_culling=False)
         gcode_string = "\n".join(gcode_lines)
 
         with sentry_sdk.push_scope() as scope:
-            scope.add_attachment(bytes=gcode_string.encode(), filename="output_vector.gcode")
-            sentry_sdk.capture_message("vector gcode generation completed", level="info")
+            scope.add_attachment(
+                bytes=gcode_string.encode(), filename="output_vector.gcode"
+            )
+            sentry_sdk.capture_message(
+                "vector gcode generation completed", level="info"
+            )
 
         return AirbrushVectorJobResponse(
             gcode=gcode_string,
