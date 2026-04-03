@@ -22,6 +22,14 @@ def sample_image_base64():
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
+@pytest.fixture
+def sample_cmyk_jpeg_base64():
+    img = Image.new("CMYK", (100, 100), color=(0, 0, 0, 255))
+    buffer = io.BytesIO()
+    img.save(buffer, format="JPEG")
+    return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+
 def test_ping(client):
     response = client.get("/ping")
     assert response.status_code == 200
@@ -102,6 +110,16 @@ def test_generate_gcode_preview_image_is_valid(client, sample_image_base64):
 def test_generate_gcode_with_data_uri(client, sample_image_base64):
     payload = {
         "image_base64": f"data:image/png;base64,{sample_image_base64}",
+        "job_size": [100, 100],
+    }
+    response = client.post("/generate", json=payload)
+    assert response.status_code == 200
+
+
+def test_generate_gcode_with_cmyk_jpeg_data_uri(client, sample_cmyk_jpeg_base64):
+    payload = {
+        "image_base64": f"data:image/jpeg;base64,{sample_cmyk_jpeg_base64}",
+        "filename": "sample-cmyk.jpg",
         "job_size": [100, 100],
     }
     response = client.post("/generate", json=payload)
