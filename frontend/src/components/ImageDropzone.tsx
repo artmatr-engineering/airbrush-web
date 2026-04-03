@@ -105,7 +105,7 @@ export function ImageDropzone({ onUpload }: ImageDropzoneProps) {
               {isDragActive ? 'Drop image here' : 'Drop image here or click to upload'}
             </p>
             <p className="text-sm text-muted-foreground">
-              Supports PNG and JPG (compressed before upload)
+              Supports PNG and JPG
             </p>
             {error && <p className="text-sm text-destructive mt-2">{error}</p>}
           </div>
