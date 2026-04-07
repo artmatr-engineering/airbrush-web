@@ -84,15 +84,16 @@ def test_generate_vector_gcode_ramps_u_values(client, sample_svg_string):
     assert response.status_code == 200
 
     gcode_lines = response.json()["gcode"].splitlines()
-    path_point_lines = [
-        line
-        for line in gcode_lines
-        if line.startswith("X") and "Y" in line and "U" in line
-    ]
+    start_idx = gcode_lines.index("; Starting path 1/1")
+    end_idx = gcode_lines.index("; Ending path 1/1")
 
-    assert path_point_lines == [
-        "X-2 Y0 U0.1",
-        "X0 Y0 U0.3",
-        "X10 Y0 U0.3",
-        "X12 Y0 U0.1",
+    assert gcode_lines[start_idx + 1 : end_idx] == [
+        "G0 X-2 Y0",
+        "G4 S0.1",
+        "G1 U0.1",
+        "X-2 Y0",
+        "X0 U0.3",
+        "X10",
+        "X12 U0.1",
+        "U0",
     ]

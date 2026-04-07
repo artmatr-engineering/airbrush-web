@@ -22,19 +22,36 @@ def gcode_output(
             fx = fg(obj.x) if obj.x is not None else None
             fy = fg(obj.y) if obj.y is not None else None
             fu = fg(obj.u, COMPARISON_TOLERANCE) if obj.u is not None else None
+            rendered_x = obj.x
+            rendered_y = obj.y
+            rendered_u = obj.u
 
             if enable_axis_culling:
                 if running_x == fx:
-                    obj.x = None
+                    rendered_x = None
                 if running_y == fy:
-                    obj.y = None
+                    rendered_y = None
                 if running_u == fu:
-                    obj.u = None
+                    rendered_u = None
 
-            if previous_point_type == obj.type:
-                gcode_strings.append(obj.out(skip_prefix=True))
-            else:
-                gcode_strings.append(obj.out())
+            skip_prefix = previous_point_type == obj.type
+            if (
+                skip_prefix
+                and rendered_x is None
+                and rendered_y is None
+                and obj.z is None
+                and rendered_u is None
+            ):
+                continue
+
+            rendered_point = GcodePoint(
+                type=obj.type,
+                x=rendered_x,
+                y=rendered_y,
+                z=obj.z,
+                u=rendered_u,
+            )
+            gcode_strings.append(rendered_point.out(skip_prefix=skip_prefix))
             previous_point_type = obj.type
             running_x = fx
             running_y = fy

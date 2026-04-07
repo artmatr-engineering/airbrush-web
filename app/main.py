@@ -149,7 +149,7 @@ async def _generate_vector_gcode_response(
         )
 
         gcode_objects = process_vector_job(request)
-        gcode_lines = gcode_output(gcode_objects, enable_axis_culling=False)
+        gcode_lines = gcode_output(gcode_objects, enable_axis_culling=True)
         gcode_string = "\n".join(gcode_lines)
 
         with sentry_sdk.push_scope() as scope:
