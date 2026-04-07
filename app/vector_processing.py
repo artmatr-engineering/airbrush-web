@@ -9,6 +9,8 @@ import vpype_cli
 from app.models import AirbrushVectorJobRequest
 from app.schema import GcodeCommand, GcodePoint
 
+MIN_SEGMENT_LENGTH_MM = 1e-9
+
 
 def _parse_svg_dimension(value: str | None, default_value: float) -> float:
     if not value:
@@ -43,6 +45,39 @@ def strip_svg_units(svg_data: str) -> str:
         if attr in root.attrib:
             del root.attrib[attr]
     return ET.tostring(root, encoding="unicode")
+
+
+def _sanitize_polyline(
+    points: np.ndarray, min_segment_length: float = MIN_SEGMENT_LENGTH_MM
+) -> np.ndarray:
+    """Drop non-finite points and collapse consecutive points that are effectively identical."""
+    points = np.asarray(points, dtype=float)
+    if points.size == 0:
+        return np.empty((0, 2), dtype=float)
+
+    if points.ndim != 2 or points.shape[1] != 2:
+        raise ValueError("Polyline points must be a Nx2 array")
+
+    points = points[np.isfinite(points).all(axis=1)]
+    if len(points) == 0:
+        return np.empty((0, 2), dtype=float)
+
+    cleaned_points = [points[0]]
+    for point in points[1:]:
+        if np.linalg.norm(point - cleaned_points[-1]) > min_segment_length:
+            cleaned_points.append(point)
+
+    return np.array(cleaned_points, dtype=float)
+
+
+def _segment_direction(
+    start: np.ndarray, end: np.ndarray, min_segment_length: float = MIN_SEGMENT_LENGTH_MM
+) -> np.ndarray | None:
+    delta = end - start
+    norm = np.linalg.norm(delta)
+    if norm <= min_segment_length:
+        return None
+    return delta / norm
 
 
 def process_svg_string_to_paths(
@@ -117,15 +152,16 @@ def parse_svg(
         scaled_path = np.zeros_like(path)
         scaled_path[:, 0] = (path[:, 0] - vb_min_x) * scale_x
         scaled_path[:, 1] = (path[:, 1] - vb_min_y) * scale_y
-        scaled_paths.append(scaled_path)
 
-    if flip_vertically:
-        for path in scaled_paths:
-            path[:, 1] = height - path[:, 1]
+        if flip_vertically:
+            scaled_path[:, 1] = height - scaled_path[:, 1]
 
-    if flip_horizontally:
-        for path in scaled_paths:
-            path[:, 0] = width - path[:, 0]
+        if flip_horizontally:
+            scaled_path[:, 0] = width - scaled_path[:, 0]
+
+        scaled_path = _sanitize_polyline(scaled_path)
+        if len(scaled_path) >= 2:
+            scaled_paths.append(scaled_path)
 
     return scaled_paths
 
@@ -133,27 +169,37 @@ def parse_svg(
 def extend_or_sample_polyline(
     points: np.ndarray, dist_start: float, dist_end: float
 ) -> np.ndarray:
+    points = _sanitize_polyline(points)
+    if len(points) < 2:
+        return points
+
     seg_lengths = np.sqrt(np.sum(np.diff(points, axis=0) ** 2, axis=1))
     cum_dist = np.insert(np.cumsum(seg_lengths), 0, 0)
+    total_length = cum_dist[-1]
 
-    if dist_start < 0 and dist_end < 0 and abs(dist_start + dist_end) > cum_dist[-1]:
+    if total_length <= MIN_SEGMENT_LENGTH_MM:
+        return points[:1].copy()
+
+    if dist_start < 0 and dist_end < 0 and abs(dist_start + dist_end) > total_length:
         segment_idx = (
             np.searchsorted(
                 cum_dist,
-                abs(dist_start) / (abs(dist_start) + abs(dist_end)) * cum_dist[-1],
+                abs(dist_start) / (abs(dist_start) + abs(dist_end)) * total_length,
                 side="right",
             )
             - 1
         )
         alpha = (
-            abs(dist_start) / (abs(dist_start) + abs(dist_end)) * cum_dist[-1]
+            abs(dist_start) / (abs(dist_start) + abs(dist_end)) * total_length
             - cum_dist[segment_idx]
         ) / seg_lengths[segment_idx]
         new_point = (1 - alpha) * points[segment_idx] + alpha * points[segment_idx + 1]
         return np.array([new_point])
 
-    direction_start = (points[1] - points[0]) / np.linalg.norm(points[1] - points[0])
-    direction_end = (points[-1] - points[-2]) / np.linalg.norm(points[-1] - points[-2])
+    direction_start = _segment_direction(points[0], points[1])
+    direction_end = _segment_direction(points[-2], points[-1])
+    if direction_start is None or direction_end is None:
+        return points[:1].copy()
 
     if dist_start < 0:
         segment_idx = np.searchsorted(cum_dist, -dist_start, side="right") - 1
@@ -167,7 +213,16 @@ def extend_or_sample_polyline(
         new_start = points[0] - dist_start * direction_start
         points = np.vstack((new_start, points))
 
-    direction_end = (points[-1] - points[-2]) / np.linalg.norm(points[-1] - points[-2])
+    points = _sanitize_polyline(points)
+    if len(points) < 2:
+        return points
+
+    seg_lengths = np.sqrt(np.sum(np.diff(points, axis=0) ** 2, axis=1))
+    cum_dist = np.insert(np.cumsum(seg_lengths), 0, 0)
+
+    direction_end = _segment_direction(points[-2], points[-1])
+    if direction_end is None:
+        return points[:1].copy()
 
     if dist_end < 0:
         segment_idx = (
@@ -222,12 +277,14 @@ def process_vector_job(job: AirbrushVectorJobRequest) -> list[GcodeCommand | Gco
     ]
 
     for i, polyline in enumerate(polylines):
+        polyline = _sanitize_polyline(polyline)
         if len(polyline) < 2:
             continue
 
         points_2d = extend_or_sample_polyline(
             polyline, job.ramp_distances[0], job.ramp_distances[1]
         )
+        points_2d = _sanitize_polyline(points_2d)
         if len(points_2d) < 2:
             continue
 
