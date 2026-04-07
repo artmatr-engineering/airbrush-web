@@ -119,7 +119,7 @@ def parse_svg(
     svg_data: str,
     width: float,
     height: float,
-    polyline_tolerance: float = 0.05,
+    polyline_tolerance: float = 0.1,
     optimize: bool = False,
     flip_vertically: bool = True,
     flip_horizontally: bool = False,
