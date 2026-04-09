@@ -17,10 +17,10 @@ const defaultVectorParams: VectorParams = {
   job_origin_corner: 'upper_left',
   ramp_distances: [3, 3],
   ab_min: 0,
-  ab_max: 500,
+  ab_max: 280,
   darkness: 100,
-  z: 15,
-  feedrate: 8000,
+  z: 8,
+  feedrate: 4800,
   optimize_toolpath: true,
 };
 
