@@ -157,6 +157,7 @@ def process_job(
         if job.keep_air_on and row == 0:
             row_header = [
                 GcodeCommand(command=f"; Starting row {row}/{image_np.shape[0]}"),
+                GcodeCommand(command=f"set global.ab_line = {row}"),
                 GcodePoint(type="G0", x=pass_start_x, y=y_location),
                 GcodeCommand(command="M400"),
                 GcodeCommand(command="M42 P1 S1; Turn on Air"),
