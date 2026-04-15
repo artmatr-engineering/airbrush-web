@@ -82,6 +82,61 @@ def test_generate_gcode_with_all_params(client, sample_image_base64):
     assert "G0" in data["gcode"]
 
 
+def test_generate_gcode_includes_frontend_parameter_header(client, sample_image_base64):
+    payload = {
+        "image_base64": sample_image_base64,
+        "filename": "source-image.png",
+        "job_size": [50, 40],
+        "job_location": [10, 20],
+        "job_origin_corner": "lower_left",
+        "print_channel": "K",
+        "padding_distance": 50,
+        "ramp_distances": [4, 6],
+        "y_step_distance": 0.5,
+        "ab_min": 10,
+        "ab_max": 280,
+        "z": 8,
+        "feedrate": 4800,
+        "gaussian_blur_radius": 2,
+        "print_direction": "bottom_to_top",
+        "enable_gradient_border": True,
+        "gradient_border_width": 5,
+        "gradient_levels": 8,
+        "draw_bounding_box": True,
+    }
+    response = client.post("/generate", json=payload)
+    assert response.status_code == 200
+
+    gcode_lines = response.json()["gcode"].splitlines()
+    expected_header = [
+        "; Job parameters from tool:",
+        "; filename: source-image.png",
+        "; job_size: [50, 40]",
+        "; job_origin_corner: lower_left",
+        "; job_location: [10, 20]",
+        "; print_channel: K",
+        "; print_direction: bottom_to_top",
+        "; feedrate: 4800",
+        "; z: 8",
+        "; padding_distance: 50",
+        "; ramp_distances: [4, 6]",
+        "; y_step_distance: 0.5",
+        "; ab_min: 10",
+        "; ab_max: 280",
+        "; gaussian_blur_radius: 2",
+        "; enable_gradient_border: true",
+        "; gradient_border_width: 5",
+        "; gradient_levels: 8",
+        "; draw_bounding_box: true",
+    ]
+
+    assert gcode_lines[: len(expected_header)] == expected_header
+    header_text = "\n".join(gcode_lines[: len(expected_header)])
+    assert "image_base64" not in header_text
+    assert "x_step_distance" not in header_text
+    assert "keep_air_on" not in header_text
+
+
 def test_generate_gcode_cmyk_channel(client, sample_image_base64):
     for channel in ["C", "M", "Y", "K"]:
         payload = {

@@ -35,6 +35,47 @@ def test_generate_vector_gcode_basic(client, sample_svg_string):
     assert "M42 P1 S1; Turn on Air" in data["gcode"]
 
 
+def test_generate_vector_gcode_includes_frontend_parameter_header(
+    client, sample_svg_string
+):
+    payload = {
+        "svg_string": sample_svg_string,
+        "filename": "source-vector.svg",
+        "job_size": [50, 40],
+        "job_location": [10, 20],
+        "job_origin_corner": "lower_left",
+        "ramp_distances": [4, 6],
+        "ab_min": 10,
+        "ab_max": 280,
+        "darkness": 75,
+        "z": 8,
+        "feedrate": 4800,
+        "optimize_toolpath": False,
+    }
+    response = client.post("/generate-vector", json=payload)
+    assert response.status_code == 200
+
+    gcode_lines = response.json()["gcode"].splitlines()
+    expected_header = [
+        "; Job parameters from tool:",
+        "; filename: source-vector.svg",
+        "; job_size: [50, 40]",
+        "; job_origin_corner: lower_left",
+        "; job_location: [10, 20]",
+        "; feedrate: 4800",
+        "; z: 8",
+        "; ramp_distances: [4, 6]",
+        "; ab_min: 10",
+        "; ab_max: 280",
+        "; darkness: 75",
+        "; optimize_toolpath: false",
+    ]
+
+    assert gcode_lines[: len(expected_header)] == expected_header
+    header_text = "\n".join(gcode_lines[: len(expected_header)])
+    assert "svg_string" not in header_text
+
+
 def test_generate_vector_gcode_origin_corner_changes_y_position(client, sample_svg_string):
     shared_payload = {
         "svg_string": sample_svg_string,

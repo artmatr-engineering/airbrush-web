@@ -41,6 +41,41 @@ logger.debug(f"Sentry DSN configured: {client.dsn}")
 
 app = FastAPI(title="Airbrush Web API", version="0.1.0")
 
+RASTER_GCODE_PARAMETER_ORDER = [
+    "filename",
+    "job_size",
+    "job_origin_corner",
+    "job_location",
+    "print_channel",
+    "print_direction",
+    "feedrate",
+    "z",
+    "padding_distance",
+    "ramp_distances",
+    "y_step_distance",
+    "ab_min",
+    "ab_max",
+    "gaussian_blur_radius",
+    "enable_gradient_border",
+    "gradient_border_width",
+    "gradient_levels",
+    "draw_bounding_box",
+]
+
+VECTOR_GCODE_PARAMETER_ORDER = [
+    "filename",
+    "job_size",
+    "job_origin_corner",
+    "job_location",
+    "feedrate",
+    "z",
+    "ramp_distances",
+    "ab_min",
+    "ab_max",
+    "darkness",
+    "optimize_toolpath",
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -65,6 +100,26 @@ def encode_image_to_base64(image: Image.Image) -> str:
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+
+def _format_gcode_header_value(value):
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    if isinstance(value, list):
+        return f"[{', '.join(_format_gcode_header_value(item) for item in value)}]"
+    return str(value)
+
+
+def _gcode_parameter_header(request, parameter_order, exclude):
+    request_data = request.model_dump(mode="json", exclude=exclude)
+    header = ["; Job parameters from tool:"]
+    header.extend(
+        f"; {parameter}: {_format_gcode_header_value(request_data[parameter])}"
+        for parameter in parameter_order
+    )
+    return header
 
 
 @app.get("/test")
@@ -100,7 +155,10 @@ async def _generate_gcode_response(request: AirbrushJobRequest) -> AirbrushJobRe
             bounding_box_z=request.z,
         )
 
-        gcode_lines = gcode_output(result.gcode_objects, enable_axis_culling=False)
+        gcode_lines = _gcode_parameter_header(
+            request, RASTER_GCODE_PARAMETER_ORDER, {"image_base64"}
+        )
+        gcode_lines += gcode_output(result.gcode_objects, enable_axis_culling=False)
         gcode_string = "\n".join(gcode_lines)
 
         preview_base64 = encode_image_to_base64(result.preview_image)
@@ -149,7 +207,10 @@ async def _generate_vector_gcode_response(
         )
 
         gcode_objects = process_vector_job(request)
-        gcode_lines = gcode_output(gcode_objects, enable_axis_culling=True)
+        gcode_lines = _gcode_parameter_header(
+            request, VECTOR_GCODE_PARAMETER_ORDER, {"svg_string"}
+        )
+        gcode_lines += gcode_output(gcode_objects, enable_axis_culling=True)
         gcode_string = "\n".join(gcode_lines)
 
         with sentry_sdk.push_scope() as scope:
