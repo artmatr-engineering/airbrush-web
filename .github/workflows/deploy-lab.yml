@@ -2,6 +2,7 @@ name: deploy-airbrush-web-lab
 on:
   push:
     branches: [lab]
+  workflow_dispatch: 
 
 jobs:
   build-and-push:
