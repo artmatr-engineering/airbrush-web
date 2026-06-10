@@ -136,7 +136,7 @@ def process_job(
     for row in range(image_np.shape[0]):
         y_location = get_row_y_location(job, row, image_start_y, image_end_y)
 
-        x_step_pixels = int(job.x_step_distance)
+        x_step_pixels = 1 #int(job.x_step_distance)
         x_values = (np.arange(image_np.shape[1]) + image_start_x)[::x_step_pixels]
         u_values = (image_np[row, :] / 255 * (ab_max_mm - ab_min_mm) + ab_min_mm)[
             ::x_step_pixels
