@@ -1,7 +1,7 @@
 name: deploy-airbrush-web
 on:
-  push:
-    branches: [main]
+  # Disabled automatic deploys to the matr-vps self-hosted runner.
+  # Droplet deploys are handled by deploy.yml. Run manually if needed.
   workflow_dispatch:
 
 jobs:

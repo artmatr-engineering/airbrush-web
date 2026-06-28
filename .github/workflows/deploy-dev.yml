@@ -1,7 +1,7 @@
 name: deploy-airbrush-web-dev
 on:
-  push:
-    branches: [dev]
+  # Disabled automatic deploys to the matr-vps self-hosted runner.
+  # Run manually if needed.
   workflow_dispatch:
 
 jobs:

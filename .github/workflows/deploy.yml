@@ -12,19 +12,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Write SSH private key
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE"
-          printf '%s' '${{ secrets.SSH_PRIVATE_KEY }}' > "$GITHUB_WORKSPACE/deploy_key"
-          chmod 600 "$GITHUB_WORKSPACE/deploy_key"
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           port: ${{ secrets.DROPLET_PORT }}
-          key_path: ${{ github.workspace }}/deploy_key
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -euo pipefail
             # Ensure repo exists on the server and update to HEAD
