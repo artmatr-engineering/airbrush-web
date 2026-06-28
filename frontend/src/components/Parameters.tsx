@@ -91,7 +91,11 @@ export function Parameters({
         setImageAspect(img.naturalWidth / img.naturalHeight);
       }
     };
-    img.src = imageBase64;
+    // The store holds raw base64 (the data-URL prefix is stripped on upload),
+    // so rebuild a valid data URL for the Image to load.
+    img.src = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
   }, [imageBase64]);
 
   // Aspect to enforce when locked: the image's ratio if available, otherwise
