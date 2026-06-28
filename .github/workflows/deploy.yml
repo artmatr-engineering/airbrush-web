@@ -1,0 +1,31 @@
+name: Deploy to Droplet
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to DigitalOcean Droplet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          port: ${{ secrets.DROPLET_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            # Ensure repo exists on the server and update to HEAD
+            cd ~/airbrush-web/airbrush-web || (git clone https://github.com/artmatr-engineering/airbrush-web.git ~/airbrush-web/airbrush-web && cd ~/airbrush-web/airbrush-web)
+            git fetch --all
+            git reset --hard origin/main
+
+            # Pull any new base images and rebuild
+            docker compose -f docker-compose.prod.yml pull --ignore-pull-failures || true
+            docker compose -f docker-compose.prod.yml up -d --build
