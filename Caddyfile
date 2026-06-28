@@ -1,0 +1,19 @@
+{$SITE_ADDRESS} {
+	encode gzip
+
+	# Allow large image uploads (matches the old nginx client_max_body_size).
+	request_body {
+		max_size 200MB
+	}
+
+	# /api/* -> backend (the /api prefix is stripped, mirroring nginx's
+	# `proxy_pass http://backend:9090/;` trailing-slash behaviour).
+	handle_path /api/* {
+		reverse_proxy backend:9090
+	}
+
+	# Everything else -> frontend SPA.
+	handle {
+		reverse_proxy frontend:9091
+	}
+}
