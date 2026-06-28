@@ -1,10 +1,10 @@
-import type { AirbrushParams } from '@/components/Parameters';
+import type { AirbrushParams } from "@/components/Parameters";
 
 export const defaultParams: AirbrushParams = {
   job_size: [1000, 1000],
   job_location: [0, 0],
-  job_origin_corner: 'upper_left',
-  print_channel: 'GRAYSCALE',
+  job_origin_corner: "upper_left",
+  print_channel: "GRAYSCALE",
   padding_distance: 75,
   ramp_distances: [6, 6],
   y_step_distance: 1,
@@ -12,8 +12,8 @@ export const defaultParams: AirbrushParams = {
   ab_max: 280,
   z: 8,
   feedrate: 4800,
-  gaussian_blur_radius: 2,
-  print_direction: 'top_to_bottom',
+  gaussian_blur_radius: 0.5,
+  print_direction: "top_to_bottom",
   enable_gradient_border: false,
   gradient_border_width: 20,
   gradient_levels: 10,

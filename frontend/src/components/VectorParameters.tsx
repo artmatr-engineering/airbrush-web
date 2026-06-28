@@ -58,7 +58,7 @@ export function VectorParameters({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
         <div className="flex flex-col gap-2">
           <h3 className="text-lg font-semibold px-2 ml-2 pt-2">Parameters</h3>
           <div className="flex flex-col gap-3 px-2 mb-4">

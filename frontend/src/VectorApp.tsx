@@ -93,8 +93,14 @@ export function VectorApp() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <header className="border-b bg-background px-4 py-2">
-        <h1 className="text-[1.1rem] font-bold">Matr Labs Airbrush GCODE Generator - Vector</h1>
+      <header className="flex h-12 items-center gap-2.5 border-b bg-background px-4">
+        <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
+        <h1 className="text-sm font-semibold tracking-tight">
+          Matr Labs Airbrush
+        </h1>
+        <span className="text-xs text-muted-foreground">
+          G-code Generator · Vector
+        </span>
       </header>
 
       <div className="flex flex-1 overflow-hidden">

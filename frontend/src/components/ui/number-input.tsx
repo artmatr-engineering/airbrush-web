@@ -38,6 +38,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       prefix,
       value: controlledValue,
       className,
+      onBlur,
       ...props
     },
     ref
@@ -49,18 +50,22 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     );
 
     const handleIncrement = useCallback(() => {
-      setValue((prev) =>
-        prev === undefined ? stepper ?? 1 : Math.min(prev + (stepper ?? 1), max)
-      );
-    }, [stepper, max]);
+      const next =
+        value === undefined
+          ? stepper ?? 1
+          : Math.min(value + (stepper ?? 1), max);
+      setValue(next);
+      onValueChange?.(next);
+    }, [value, stepper, max, onValueChange]);
 
     const handleDecrement = useCallback(() => {
-      setValue((prev) =>
-        prev === undefined
+      const next =
+        value === undefined
           ? -(stepper ?? 1)
-          : Math.max(prev - (stepper ?? 1), min)
-      );
-    }, [stepper, min]);
+          : Math.max(value - (stepper ?? 1), min);
+      setValue(next);
+      onValueChange?.(next);
+    }, [value, stepper, min, onValueChange]);
 
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -100,18 +105,21 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       }
     };
 
-    const handleBlur = () => {
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       if (value !== undefined) {
         if (value < min) {
           setValue(min);
+          onValueChange?.(min);
           (ref as React.RefObject<HTMLInputElement>).current!.value =
             String(min);
         } else if (value > max) {
           setValue(max);
+          onValueChange?.(max);
           (ref as React.RefObject<HTMLInputElement>).current!.value =
             String(max);
         }
       }
+      onBlur?.(e);
     };
 
     return (
@@ -131,7 +139,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           prefix={prefix}
           customInput={Input}
           placeholder={placeholder}
-          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative h-full"
+          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative h-full font-mono tabular-nums"
           getInputRef={combinedRef}
           {...props}
         />

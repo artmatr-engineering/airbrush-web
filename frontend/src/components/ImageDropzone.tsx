@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { ImageUp } from 'lucide-react';
 
 interface ImageDropzoneProps {
   onUpload: (imageBase64: string, filename: string) => void;
@@ -92,23 +93,30 @@ export function ImageDropzone({ onUpload }: ImageDropzoneProps) {
     <div className="h-full w-full">
       <div
         {...getRootProps()}
-        className={`h-full w-full cursor-pointer transition-colors rounded-lg border border-dashed ${
+        className={`group flex h-full w-full cursor-pointer items-center justify-center rounded-xl border border-dashed p-8 transition-colors ${
           isDragActive
-            ? 'bg-primary/10 border-primary'
-            : 'bg-muted border-muted-foreground/25'
+            ? 'border-primary bg-primary/5'
+            : 'border-border bg-muted/30 hover:border-muted-foreground/40 hover:bg-muted/50'
         }`}
       >
         <input {...getInputProps()} />
-        <div className="h-full flex items-center justify-center p-8">
-          <div className="text-center">
-            <p className="text-xl font-medium text-foreground mb-2">
-              {isDragActive ? 'Drop image here' : 'Drop image here or click to upload'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Supports PNG and JPG
-            </p>
-            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-full border transition-colors ${
+              isDragActive
+                ? 'border-primary text-primary'
+                : 'border-border text-muted-foreground group-hover:text-foreground'
+            }`}
+          >
+            <ImageUp className="h-6 w-6" />
           </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {isDragActive ? 'Drop image here' : 'Drop image or click to upload'}
+            </p>
+            <p className="text-xs text-muted-foreground">PNG or JPG</p>
+          </div>
+          {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
       </div>
     </div>
