@@ -14,9 +14,9 @@ jobs:
 
       - name: Write SSH private key
         run: |
-          mkdir -p "$RUNNER_TEMP"
-          printf '%s' '${{ secrets.SSH_PRIVATE_KEY }}' > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
+          mkdir -p "$GITHUB_WORKSPACE"
+          printf '%s' '${{ secrets.SSH_PRIVATE_KEY }}' > "$GITHUB_WORKSPACE/deploy_key"
+          chmod 600 "$GITHUB_WORKSPACE/deploy_key"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -24,7 +24,7 @@ jobs:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           port: ${{ secrets.DROPLET_PORT }}
-          key_path: /tmp/deploy_key
+          key_path: ${{ github.workspace }}/deploy_key
           script: |
             set -euo pipefail
             # Ensure repo exists on the server and update to HEAD
