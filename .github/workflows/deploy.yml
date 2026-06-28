@@ -29,3 +29,7 @@ jobs:
             # Pull any new base images and rebuild
             docker compose -f docker-compose.prod.yml pull --ignore-pull-failures || true
             docker compose -f docker-compose.prod.yml up -d --build
+
+            # Rebuilt backend/frontend get new container IPs; restart nginx so it
+            # re-resolves its upstreams and we don't serve a stale-IP 502.
+            docker compose -f docker-compose.prod.yml restart nginx
