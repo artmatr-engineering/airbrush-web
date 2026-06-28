@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Download } from 'lucide-react';
+import { Loader2, Download, Lock, LockOpen } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store';
 
 export interface AirbrushParams {
@@ -73,6 +74,63 @@ export function Parameters({
     setParams({ ...params, [key]: value });
   };
 
+  // Lock width/height to the source image's aspect ratio. UI-only state, so it
+  // is not part of `params` (never sent to the backend or persisted).
+  const imageBase64 = useAppStore((s) => s.imageBase64);
+  const [aspectLocked, setAspectLocked] = useState(false);
+  const [imageAspect, setImageAspect] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!imageBase64) {
+      setImageAspect(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalHeight > 0) {
+        setImageAspect(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = imageBase64;
+  }, [imageBase64]);
+
+  // Aspect to enforce when locked: the image's ratio if available, otherwise
+  // whatever ratio the current size already has (preserves it on edit).
+  const lockedAspect =
+    imageAspect ??
+    (params.job_size[1] ? params.job_size[0] / params.job_size[1] : 1);
+
+  const setSize = (width: number, height: number) =>
+    handleParamChange('job_size', [Math.max(1, width), Math.max(1, height)]);
+
+  const handleWidthChange = (value: number | undefined) => {
+    const width = value || 1;
+    if (aspectLocked) {
+      setSize(width, Math.round(width / lockedAspect));
+    } else {
+      setSize(width, params.job_size[1]);
+    }
+  };
+
+  const handleHeightChange = (value: number | undefined) => {
+    const height = value || 1;
+    if (aspectLocked) {
+      setSize(Math.round(height * lockedAspect), height);
+    } else {
+      setSize(params.job_size[0], height);
+    }
+  };
+
+  const toggleAspectLock = () => {
+    const next = !aspectLocked;
+    setAspectLocked(next);
+    // On enable, snap height to the image ratio so the size is immediately
+    // consistent (otherwise the lock only takes effect on the next edit).
+    if (next && imageAspect) {
+      setSize(params.job_size[0], Math.round(params.job_size[0] / imageAspect));
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 min-h-0 overflow-y-auto">
@@ -80,30 +138,45 @@ export function Parameters({
           <h3 className="text-lg font-semibold px-2 ml-2 pt-2">Parameters</h3>
           <div className="flex flex-col gap-3 px-2 mb-4">
             {/* Job Size */}
-            <div className="flex gap-2 px-2">
-              <div className="flex flex-col gap-1 flex-1">
-                <Label htmlFor="width">Width (mm)</Label>
-                <NumberInput
-                  id="width"
-                  min={1}
-                  value={params.job_size[0]}
-                  onValueChange={(value) =>
-                    handleParamChange('job_size', [value || 1, params.job_size[1]])
-                  }
-                  className="h-9 w-full"
-                />
+            <div className="flex flex-col gap-1 px-2">
+              <div className="flex items-center justify-between pr-1">
+                <span className="text-sm font-medium">Size (mm)</span>
+                <button
+                  type="button"
+                  onClick={toggleAspectLock}
+                  aria-pressed={aspectLocked}
+                  title="Lock width/height to the image aspect ratio"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {aspectLocked ? (
+                    <Lock className="h-3.5 w-3.5" />
+                  ) : (
+                    <LockOpen className="h-3.5 w-3.5" />
+                  )}
+                  {aspectLocked ? 'Locked' : 'Lock ratio'}
+                </button>
               </div>
-              <div className="flex flex-col gap-1 flex-1">
-                <Label htmlFor="height">Height (mm)</Label>
-                <NumberInput
-                  id="height"
-                  min={1}
-                  value={params.job_size[1]}
-                  onValueChange={(value) =>
-                    handleParamChange('job_size', [params.job_size[0], value || 1])
-                  }
-                  className="h-9 w-full"
-                />
+              <div className="flex gap-2">
+                <div className="flex flex-col gap-1 flex-1">
+                  <Label htmlFor="width">Width</Label>
+                  <NumberInput
+                    id="width"
+                    min={1}
+                    value={params.job_size[0]}
+                    onValueChange={handleWidthChange}
+                    className="h-9 w-full"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 flex-1">
+                  <Label htmlFor="height">Height</Label>
+                  <NumberInput
+                    id="height"
+                    min={1}
+                    value={params.job_size[1]}
+                    onValueChange={handleHeightChange}
+                    className="h-9 w-full"
+                  />
+                </div>
               </div>
             </div>
 
