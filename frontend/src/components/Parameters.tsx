@@ -137,8 +137,14 @@ export function Parameters({
   // Display unit for the size fields. Stored size is always millimetres.
   const [unit, setUnit] = useState<"mm" | "in">("mm");
 
+  // job_size is sent to the backend as integer millimetres (tuple[int, int]),
+  // so always round here — aspect-lock / scale / inch conversion can otherwise
+  // produce fractional values that fail backend validation (422).
   const setSize = (width: number, height: number) =>
-    handleParamChange("job_size", [Math.max(1, width), Math.max(1, height)]);
+    handleParamChange("job_size", [
+      Math.max(1, Math.round(width)),
+      Math.max(1, Math.round(height)),
+    ]);
 
   useEffect(() => {
     if (!imageBase64) {

@@ -26,9 +26,11 @@ jobs:
             git fetch --all
             git reset --hard origin/main
 
-            # Pull any new base images and rebuild
+            # Pull any new base images and rebuild. --remove-orphans clears out
+            # containers for services that no longer exist (e.g. the old nginx,
+            # which would otherwise keep holding ports 80/443).
             docker compose -f docker-compose.prod.yml pull --ignore-pull-failures || true
-            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
             # Rebuilt backend/frontend get new container IPs; restart caddy so it
             # re-resolves its upstreams and we don't serve a stale-IP 502.
