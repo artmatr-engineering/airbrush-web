@@ -23,7 +23,7 @@ export function ImageViewer({ imageBase64 }: ImageViewerProps) {
         minScale={0.5}
         maxScale={12}
         centerOnInit
-        wheel={{ step: 0.01, smoothStep: 0.0015 }}
+        wheel={{ step: 0.03 }}
         doubleClick={{ mode: "reset" }}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
